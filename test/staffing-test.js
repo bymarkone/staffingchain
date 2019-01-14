@@ -11,9 +11,10 @@ contract('Staffing', accounts => {
 		it('creates a staffing request', async function() {
 			await this.contract.createStaffingRequest(1, 'Premier', 'AMP', 'Tech Lead', 10122929911, 10)
 
-			//openRequests = this.contract.listOpenStaffingRequests()
+			openRequests = await this.contract.listOpenStaffingRequests()
+			request = await this.contract.getStaffingRequestDetails() 
 
-			console.log(openRequests)
+			console.log(request)
 		})
 
 	})
