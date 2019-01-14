@@ -32,24 +32,27 @@ contract Staffing {
 
 	// approve
 	// apply
-
 	function listOpenStaffingRequests() view public returns (StaffingRequest[]) {
 		return staffingRequests;
 	}	
 
-	function getStaffingRequestDetails() view public returns (string, string) {
-		return (staffingRequests[0].account(), staffingRequests[0].project());
+	function getStaffingRequestDetails(address id) view public returns (string, string) {
+		StaffingRequest request;
+		for (uint i = 0; i < staffingRequests.length; i++) {
+			if (address(staffingRequests[i]) == id) {
+				request = staffingRequests[i];
+			}
+		}
+		return (request.account(), request.project());
 	}
 
-	function createStaffingRequest(uint256 index, 
-																 string _account, 
-																 string _project, 
-																 string _role,
-																 uint256 _start,
-																 uint256 _duration) public {
+	function createStaffingRequest(uint256 index, string _account, string _project, 
+																 string _role, uint256 _start, uint256 _duration) public {
 
 		bytes32 requestIdentity = keccak256(abi.encodePacked(index, _account, _project));
 		require(!existingRequests[requestIdentity]);
+
+		existingRequests[requestIdentity] = true;
 
 		StaffingRequest	request = new StaffingRequest(
 			msg.sender,
@@ -63,6 +66,5 @@ contract Staffing {
 		);
 
 		staffingRequests.push(request);
-
 	}
 }
