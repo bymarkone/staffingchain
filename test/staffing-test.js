@@ -11,9 +11,9 @@ contract('Staffing', accounts => {
 		it('creates a staffing request', async function() {
 			await this.contract.createStaffingRequest(1, 'An Account', 'A Project', 'Tech Lead', 10122929911, 10)
 
-			openRequests = await this.contract.listOpenStaffingRequests()
-			request = await this.contract.getStaffingRequestDetails(openRequests[0])
-
+			const openRequests = await this.contract.listOpenStaffingRequests()
+			const request = await this.contract.getStaffingRequestDetails(openRequests[0])
+	
 			assert.equal(openRequests.length, 1)
 			assert.equal(request[0], 'An Account')
 			assert.equal(request[1], 'A Project')
@@ -28,9 +28,20 @@ contract('Staffing', accounts => {
 				openRequests = await this.contract.listOpenStaffingRequests()
 				assert.equal(openRequests.length, 1)
 			}
-			
 		})
-
 	})
 
+	describe('role application', () => {
+
+		it('apply for a staffing request', async function() {
+			await this.contract.createStaffingRequest(1, 'An Account 2', 'A Project', 'Tech Lead', 10122929911, 10)
+			const openRequests = await this.contract.listOpenStaffingRequests()
+
+			const account = await this.contract.applyForRole(openRequests[0])
+
+			const request = await this.contract.getStaffingRequestDetails(openRequests[0])
+
+			assert.equal(request[2], 1)
+		})
+	})
 })

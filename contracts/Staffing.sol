@@ -9,6 +9,8 @@ contract StaffingRequest {
 	uint256 public start;
 	uint256 public duration;
 	bool public open;
+
+	address[] public candidates;
 	
 	constructor(address _creator, bytes32 _requestId, string _account, string _project, 
 											 string _role, uint256 _start, uint256 _duration, bool _open) public {
@@ -23,9 +25,18 @@ contract StaffingRequest {
 		open = _open;
 	}
 
+	function addCandidate(address candidate) public {
+		candidates.push(candidate);
+	}
+
+	function numberOfCandidates() public view returns (uint) {
+		return candidates.length;
+	}
 }
 
 contract Staffing {
+
+	event StaffingRequestCreated(StaffingRequest request);
 
 	StaffingRequest[] staffingRequests;
 	mapping(bytes32 => bool) existingRequests;
@@ -36,14 +47,14 @@ contract Staffing {
 		return staffingRequests;
 	}	
 
-	function getStaffingRequestDetails(address id) view public returns (string, string) {
+	function getStaffingRequestDetails(address id) view public returns (string, string, uint) {
 		StaffingRequest request;
 		for (uint i = 0; i < staffingRequests.length; i++) {
 			if (address(staffingRequests[i]) == id) {
 				request = staffingRequests[i];
 			}
 		}
-		return (request.account(), request.project());
+		return (request.account(), request.project(), request.numberOfCandidates());
 	}
 
 	function createStaffingRequest(uint256 index, string _account, string _project, 
@@ -66,5 +77,15 @@ contract Staffing {
 		);
 
 		staffingRequests.push(request);
+
+		emit StaffingRequestCreated(request);
+
 	}
+
+	function applyForRole(StaffingRequest request) public returns (string) {
+		require(request.open());
+		
+		request.addCandidate(msg.sender);
+	}
+
 }
