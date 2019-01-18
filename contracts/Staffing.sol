@@ -1,5 +1,15 @@
 pragma solidity ^0.4.24;
 
+contract StaffingRequestApproval {
+	StaffingRequest public staffingRequest;
+	address public approver;
+
+	constructor(StaffingRequest _request, address _approver) public {
+		staffingRequest = _request;
+		approver = _approver;
+	}
+}
+
 contract StaffingRequest {
 	address public creator; 
 	bytes32 public requestId;
@@ -10,7 +20,9 @@ contract StaffingRequest {
 	uint256 public duration;
 	bool public open;
 
-	address[] public candidates;
+	mapping(address => bool) candidates;
+	uint candidatesCount;
+	address public occupant;
 	
 	constructor(address _creator, bytes32 _requestId, string _account, string _project, 
 											 string _role, uint256 _start, uint256 _duration, bool _open) public {
@@ -26,11 +38,16 @@ contract StaffingRequest {
 	}
 
 	function addCandidate(address candidate) public {
-		candidates.push(candidate);
+		candidates[candidate] = true;
+		candidatesCount += 1;
 	}
 
 	function numberOfCandidates() public view returns (uint) {
-		return candidates.length;
+		return candidatesCount;
+	}
+
+	function hasCandidate(address candidate) public view returns (bool) {
+		return candidates[candidate];
 	}
 }
 
@@ -40,9 +57,9 @@ contract Staffing {
 
 	StaffingRequest[] staffingRequests;
 	mapping(bytes32 => bool) existingRequests;
+	StaffingRequestApproval[] approvals;
 
 	// approve
-	// apply
 	function listOpenStaffingRequests() view public returns (StaffingRequest[]) {
 		return staffingRequests;
 	}	
@@ -86,6 +103,35 @@ contract Staffing {
 		require(request.open());
 		
 		request.addCandidate(msg.sender);
+	}
+
+	function approveCandidate(StaffingRequest request, address candidate) public {
+		require(request.open());
+		require(request.hasCandidate(candidate));
+
+		bool inTeam;
+
+		if (request.creator() == msg.sender) {
+			inTeam = true;
+		} else {
+			for (uint i = 0; i < staffingRequests.length; i++) {
+				StaffingRequest sr = staffingRequests[i];
+				if (!sr.open() && sr.occupant() == msg.sender
+						&& isEqual(sr.account(), request.account())
+						&& isEqual(sr.project(), request.project())) {
+					inTeam = true;
+				}
+			}
+		}
+
+		
+		require(inTeam);
+
+		approvals.push(new StaffingRequestApproval(request, msg.sender));
+	}
+
+	function isEqual(string first, string second) private pure returns (bool) {
+		return keccak256(first) == keccak256(second);
 	}
 
 }

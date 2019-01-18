@@ -44,4 +44,17 @@ contract('Staffing', accounts => {
 			assert.equal(request[2], 1)
 		})
 	})
+
+	describe('role approval', () => {
+
+		it('approve a role', async function() {
+			await this.contract.createStaffingRequest(1, 'An Account 3', 'A Project', 'Tech Lead', 10122929911, 10)
+			const openRequests = await this.contract.listOpenStaffingRequests()
+
+			const account = await this.contract.applyForRole(openRequests[0])
+
+			await this.contract.approveCandidate(openRequests[0], accounts[0])
+
+		})
+	})
 })
