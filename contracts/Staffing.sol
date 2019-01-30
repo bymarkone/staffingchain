@@ -42,6 +42,10 @@ contract StaffingRequest {
 		candidatesCount += 1;
 	}
 
+	function close() public {
+		open = false;
+	}
+
 	function numberOfCandidates() public view returns (uint) {
 		return candidatesCount;
 	}
@@ -123,11 +127,46 @@ contract Staffing {
 				}
 			}
 		}
-
 		
 		require(inTeam);
 
 		approvals.push(new StaffingRequestApproval(request, msg.sender));
+
+		attemptApproveRequest(request);
+	}
+
+	function attemptApproveRequest(StaffingRequest request) private {
+		
+		bool teamApproval = false;
+
+		for (uint i = 0; i < staffingRequests.length; i++) {
+			StaffingRequest sr = staffingRequests[i];
+			if (!sr.open() 
+					&& isEqual(sr.account(), request.account())
+					&& isEqual(sr.project(), request.project())) {
+
+				bool hasApproved = false;
+				
+				for (uint j = 0; j < approvals.length; j++) {
+					StaffingRequestApproval approval = approvals[j];
+					if (approval.request() == request &&
+							sr.occupant() == aproval.approver()) {
+						hasApproved = true;
+					}
+				}
+
+				if (!hasApproved) {
+					teamApproval = false;
+					return;
+				}
+
+				teamApproval = true;
+			}
+		}
+
+		if (teamApproval) {
+			request.close();
+		}
 	}
 
 	function isEqual(string first, string second) private pure returns (bool) {
